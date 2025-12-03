@@ -1,0 +1,32 @@
+<div class="container">
+
+  <h2>Sopa de Letras</h2>
+
+  <p><strong>Tiempo:</strong> {{ timer }} segundos</p>
+
+  <!-- Lista de palabras -->
+  <div class="word-list">
+    <h3>Palabras a buscar</h3>
+    <ul>
+      @for (w of words; track w) {
+        <li [class.found]="isFound(w)">
+          {{ w }}
+        </li>
+      }
+    </ul>
+  </div>
+
+  <!-- Grilla -->
+  <table class="grid">
+    @for (row of grid; let r = $index; track r) {
+      <tr>
+        @for (col of row; let c = $index; track c) {
+          <td (click)="markWordAsFound(col)">
+            {{ col }}
+          </td>
+        }
+      </tr>
+    }
+  </table>
+
+</div>
