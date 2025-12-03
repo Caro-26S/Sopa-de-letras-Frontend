@@ -1,9 +1,11 @@
 import { Component, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { WordSearch } from './components/word-search/word-search';
+
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
+  imports: [RouterOutlet, WordSearch],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
