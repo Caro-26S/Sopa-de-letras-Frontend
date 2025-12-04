@@ -73,5 +73,38 @@
       </ul>
     </div>
   </div>
+</div>
 
+<div class="card ranking">
+  <h3 class="title-centered">Tabla de Puestos</h3>
+
+  <table class="ranking-table">
+    <thead>
+      <tr>
+        <th>Puesto</th>
+        <th>Jugador</th>
+        <th>Puntaje</th>
+        <th>Tiempo (s)</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      @for (item of rankingList; track item.name; let i = $index) {
+
+        <tr>
+          <td class="medal-col">
+            @if (i === 0) { 🥇 }
+            @else if (i === 1) { 🥈 }
+            @else if (i === 2) { 🥉 }
+            @else { {{ i + 1 }} }
+          </td>
+
+          <td>{{ item.name }}</td>
+          <td>{{ item.score }}</td>
+          <td>{{ item.time }}</td>
+        </tr>
+
+      }
+    </tbody>
+  </table>
 </div>

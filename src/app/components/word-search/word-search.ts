@@ -6,6 +6,7 @@ import { WebSocketConnection } from '../../services/connection/web-socket-connec
 import { ScoreResponse } from '../../models/ScoreResponse';
 import { ScoreMessage } from '../../models/ScoreMessage';
 import { Inject, PLATFORM_ID } from '@angular/core';
+import Swal from 'sweetalert2';
 
 type Cell = {
   r: number;
@@ -31,6 +32,9 @@ type PlacedWord = {
   host: { ngSkipHydration: '' }
 })
 export class WordSearch implements OnInit, OnDestroy {
+  
+  rankingList: any[] = [];
+  currentPlayerName: string = '';
   // GRID fijo 12x12
   readonly SIZE = 12;
   grid: Cell[][] = [];
@@ -79,6 +83,7 @@ export class WordSearch implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    this.loadRankingFromSession();
     this.initEmptyGrid();
     // Nos suscribimos a respuestas del servidor STOMP (si las hay)
     this.socketSub = this.socket.getScoreResponse().subscribe((resp: ScoreResponse) => {
@@ -105,6 +110,35 @@ export class WordSearch implements OnInit, OnDestroy {
   }
 
   async startGame() {
+    // pedir nombre ANTES de iniciar
+    const { value: playerName } = await Swal.fire({
+      title: 'Ingresa tu nombre',
+      input: 'text',
+      inputPlaceholder: 'Tu nombre',
+      allowOutsideClick: false,
+      inputValidator: (value) => {
+        if (!value) return 'El nombre es obligatorio';
+        return null;
+      }
+    });
+
+    // ---------------------------
+    // VALIDACIÓN: Nombre repetido
+    // ---------------------------
+    const alreadyExists = this.rankingList.some(
+      (x) => x.name.toLowerCase() === playerName.toLowerCase()
+    );
+
+    if (alreadyExists) {
+      await Swal.fire({
+        icon: 'error',
+        title: 'Nombre duplicado',
+        text: `El jugador "${playerName}" ya está registrado. Usa otro nombre.`,
+      });
+      return; // detener el inicio del juego
+    }
+    
+    this.currentPlayerName = playerName;
     this.loading = true;
     this.resetState();
 
@@ -273,9 +307,29 @@ export class WordSearch implements OnInit, OnDestroy {
     this.currentSelection = [];
     // si todas encontradas, detener timer
     if (this.wordsToFind.every(w => w.found)) {
+
       this.stopTimer();
       this.message = `¡Juego completado! Tiempo: ${this.timer}s - Puntaje: ${this.score}`;
+    
+      // --- guardar en ranking ---
+      const entry = {
+        name: this.currentPlayerName,
+        score: this.score,
+        time: this.timer
+      };
+    
+      this.rankingList.push(entry);
+    
+      // ordenar por puntaje DESC y tiempo ASC
+      this.rankingList.sort((a, b) => {
+        if (b.score === a.score) return a.time - b.time;
+        return b.score - a.score;
+      });
+    
+      // guardar en sessionStorage
+      this.saveRankingToSession();
     }
+    
   }
 
   addToSelection(cell: Cell) {
@@ -306,6 +360,21 @@ export class WordSearch implements OnInit, OnDestroy {
     }
     this.stopTimer();
     this.message = `Resuelto automáticamente. Puntaje: ${this.score}`;
+
+    // guardar auto-solve en ranking
+    const entry = {
+      name: this.currentPlayerName,
+      score: this.score,
+      time: this.timer
+    };
+
+    this.rankingList.push(entry);
+    this.rankingList.sort((a, b) => {
+      if (b.score === a.score) return a.time - b.time;
+      return b.score - a.score;
+    });
+
+    this.saveRankingToSession();
   }
 
   // ---------------------------
@@ -340,4 +409,35 @@ export class WordSearch implements OnInit, OnDestroy {
       [arr[i], arr[j]] = [arr[j], arr[i]];
     }
   }
+
+  // ---------------------------
+  // Storage helpers (SSR-safe)
+  // ---------------------------
+  private isBrowser(): boolean {
+    return isPlatformBrowser(this.platformId);
+  }
+
+  private loadRankingFromSession(): void {
+    if (!this.isBrowser()) {
+      this.rankingList = [];
+      return;
+    }
+    try {
+      const stored = sessionStorage.getItem('ranking');
+      this.rankingList = stored ? JSON.parse(stored) : [];
+    } catch (e) {
+      console.warn('No se pudo leer sessionStorage:', e);
+      this.rankingList = [];
+    }
+  }
+
+  private saveRankingToSession(): void {
+    if (!this.isBrowser()) return;
+    try {
+      sessionStorage.setItem('ranking', JSON.stringify(this.rankingList));
+    } catch (e) {
+      console.warn('No se pudo escribir sessionStorage:', e);
+    }
+  }
+
 }
