@@ -14,15 +14,6 @@
   color: #1e293b; /* Gris oscuro elegante */
 }
 
-/* ---- FONDO GENERAL ---- */
-.container-root {
-  display: flex;
-  gap: 1rem;
-  padding: 1rem;
-  background: linear-gradient(180deg, #eef2ff 0%, #f3f6ff 100%);
-  min-height: 80vh;
-}
-
 /* ---- PANEL IZQUIERDO ---- */
 .left-panel {
   width: 320px;
