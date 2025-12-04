@@ -161,7 +161,7 @@ export class WordSearch implements OnInit, OnDestroy {
       // Validar: solo letras (incluye ñ, acentos), mínimo 3 caracteres
       const validWords = list
         .map(w => (typeof w === 'string' ? w.trim() : ''))
-        .filter(w => /^[A-Za-zÁÉÍÓÚÜáéíóúüÑñ]+$/.test(w) && w.length >= 3)
+        .filter(w => /^[A-Za-zÁÉÍÓÚÜáéíóúüÑñ]+$/.test(w) && w.length >= 3 && w.length <= 10)
         .map(w => w.toUpperCase());
 
       this.allWords = validWords;
