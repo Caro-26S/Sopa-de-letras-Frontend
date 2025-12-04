@@ -1,32 +1,77 @@
-<div class="container">
+<div class="container-root three-columns">
 
-  <h2>Sopa de Letras</h2>
+  <!-- ▬▬▬▬▬▬▬▬▬  COLUMNA 1  ▬▬▬▬▬▬▬▬▬ -->
+  <div class="left-panel">
+    <div class="card stat">
+      <h3>Tiempo</h3>
+      <div class="large">{{ timer }}s</div>
+    </div>
 
-  <p><strong>Tiempo:</strong> {{ timer }} segundos</p>
+    <div class="card stat">
+      <h3>Puntaje</h3>
+      <div class="large">{{ score }}</div>
+    </div>
 
-  <!-- Lista de palabras -->
-  <div class="word-list">
-    <h3>Palabras a buscar</h3>
-    <ul>
-      @for (w of words; track w) {
-        <li [class.found]="isFound(w)">
-          {{ w }}
-        </li>
+    <div class="card controls">
+      <button class="btn primary" (click)="startGame()" [disabled]="loading">Iniciar</button>
+      <button class="btn secondary" (click)="autoSolve()" [disabled]="wordsToFind.length===0">Resolver</button>
+
+      @if (loading) {
+        <div class="note">Cargando palabras...</div>
       }
-    </ul>
+
+      @if (message) {
+        <div class="note">{{ message }}</div>
+      }
+    </div>
   </div>
 
-  <!-- Grilla -->
-  <table class="grid">
-    @for (row of grid; let r = $index; track r) {
-      <tr>
-        @for (col of row; let c = $index; track c) {
-          <td (click)="markWordAsFound(col)">
-            {{ col }}
-          </td>
+
+
+  <!-- ▬▬▬▬▬▬▬▬▬  COLUMNA 2  ▬▬▬▬▬▬▬▬▬ -->
+  <div class="center-panel">
+    <div class="board">
+      <table class="grid"
+             (mouseup)="onCellUp()"
+             (mouseleave)="onCellUp()"
+             (touchend)="onCellUp()">
+
+        @for (row of grid; track r; let r = $index) {
+          <tr>
+            @for (cell of row; track c; let c = $index) {
+              <td
+                [class.selected]="cell.selected"
+                [class.found]="cell.found"
+                (mousedown)="onCellDown(cell, $event)"
+                (mouseenter)="onCellEnter(cell, $event)"
+                (touchstart)="onCellDown(cell, $event)"
+                (touchmove)="$event.preventDefault()">
+
+                {{ cell.letter }}
+
+              </td>
+            }
+          </tr>
         }
-      </tr>
-    }
-  </table>
+
+      </table>
+    </div>
+  </div>
+
+
+
+  <!-- ▬▬▬▬▬▬▬▬▬  COLUMNA 3  ▬▬▬▬▬▬▬▬▬ -->
+  <div class="right-panel">
+    <div class="card words">
+      <h3>Palabras ({{ wordsToFind.length }})</h3>
+      <ul>
+        @for (p of wordsToFind; track p.word) {
+          <li [class.found]="p.found">
+            {{ p.word }}
+          </li>
+        }
+      </ul>
+    </div>
+  </div>
 
 </div>
