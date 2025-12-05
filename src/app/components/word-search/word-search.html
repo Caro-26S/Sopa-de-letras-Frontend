@@ -1,0 +1,110 @@
+<div class="container-root three-columns">
+
+  <!-- ▬▬▬▬▬▬▬▬▬  COLUMNA 1  ▬▬▬▬▬▬▬▬▬ -->
+  <div class="left-panel">
+    <div class="card stat">
+      <h3>Tiempo</h3>
+      <div class="large">{{ timer }}s</div>
+    </div>
+
+    <div class="card stat">
+      <h3>Puntaje</h3>
+      <div class="large">{{ score }}</div>
+    </div>
+
+    <div class="card controls">
+      <button class="btn primary" (click)="startGame()" [disabled]="loading">Iniciar</button>
+      <button class="btn secondary" (click)="autoSolve()" [disabled]="wordsToFind.length===0">Resolver</button>
+
+      @if (loading) {
+        <div class="note">Cargando palabras...</div>
+      }
+
+      @if (message) {
+        <div class="note">{{ message }}</div>
+      }
+    </div>
+  </div>
+
+
+
+  <!-- ▬▬▬▬▬▬▬▬▬  COLUMNA 2  ▬▬▬▬▬▬▬▬▬ -->
+  <div class="center-panel">
+    <div class="board">
+      <table class="grid"
+             (mouseup)="onCellUp()"
+             (mouseleave)="onCellUp()"
+             (touchend)="onCellUp()">
+
+        @for (row of grid; track r; let r = $index) {
+          <tr>
+            @for (cell of row; track c; let c = $index) {
+              <td
+                [class.selected]="cell.selected"
+                [class.found]="cell.found"
+                (mousedown)="onCellDown(cell, $event)"
+                (mouseenter)="onCellEnter(cell, $event)"
+                (touchstart)="onCellDown(cell, $event)"
+                (touchmove)="$event.preventDefault()">
+
+                {{ cell.letter }}
+
+              </td>
+            }
+          </tr>
+        }
+
+      </table>
+    </div>
+  </div>
+
+
+
+  <!-- ▬▬▬▬▬▬▬▬▬  COLUMNA 3  ▬▬▬▬▬▬▬▬▬ -->
+  <div class="right-panel">
+    <div class="card words">
+      <h3>Palabras ({{ wordsToFind.length }})</h3>
+      <ul>
+        @for (p of wordsToFind; track p.word) {
+          <li [class.found]="p.found">
+            {{ p.word }}
+          </li>
+        }
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="card ranking">
+  <h3 class="title-centered">Tabla de Puestos</h3>
+
+  <table class="ranking-table">
+    <thead>
+      <tr>
+        <th>Puesto</th>
+        <th>Jugador</th>
+        <th>Puntaje</th>
+        <th>Tiempo (s)</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      @for (item of rankingList; track item.name; let i = $index) {
+
+        <tr>
+          <td class="medal-col">
+            @if (i === 0) { 🥇 }
+            @else if (i === 1) { 🥈 }
+            @else if (i === 2) { 🥉 }
+            @else { {{ i + 1 }} }
+          </td>
+
+          <td>{{ item.name }}</td>
+          <td>{{ item.score }}</td>
+          <td>{{ item.time }}</td>
+        </tr>
+
+      }
+    </tbody>
+  </table>
+</div>

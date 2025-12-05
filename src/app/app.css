@@ -1,0 +1,16 @@
+.page-background {
+    background: linear-gradient(180deg, #eef2ff 0%, #f3f6ff 100%);
+    min-height: 100vh;
+    padding: 1rem;
+  }
+  
+
+.title-main {
+    text-align: center;
+    font-size: 42px;        /* Más grande que el h3 */
+    font-weight: 800;
+    margin-bottom: 25px;
+    letter-spacing: 1.2px;
+    color: #3B3B3B;
+  }
+  

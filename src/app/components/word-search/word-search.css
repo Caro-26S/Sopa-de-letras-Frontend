@@ -1,0 +1,221 @@
+:root {
+  --bg: #f3f6ff;          /* Fondo principal muy suave */
+  --card: #ffffff;        /* Tarjetas claras */
+  --accent: #a78bfa;      /* Lavanda suave */
+  --accent-2: #60a5fa;    /* Azul claro suave */
+  --muted: #6b7280;       /* Gris moderno */
+  --success: #34d399;     /* Verde menta suave */
+  --surface: #eef2ff;     /* Fondo secciones */
+}
+
+* {
+  box-sizing: border-box;
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  color: #1e293b; /* Gris oscuro elegante */
+}
+
+/* ---- PANEL IZQUIERDO ---- */
+.left-panel {
+  width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.card {
+  background: var(--card);
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+}
+
+.stat { text-align:center; }
+.stat .large {
+  font-size: 32px;
+  font-weight:700;
+  margin-top:8px;
+  color: var(--accent);
+}
+
+/* ---- BOTONES ---- */
+.controls {
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  align-items:center;
+}
+
+.btn {
+  padding:10px 14px;
+  border-radius:10px;
+  border: none;
+  cursor:pointer;
+  font-weight:600;
+}
+
+/* Botón principal */
+.btn.primary {
+  background: linear-gradient(90deg,var(--accent), var(--accent-2));
+  color:black;
+}
+
+/* Botón secundario */
+.btn.secondary {
+  background: transparent;
+  color: var(--accent-2);
+  border: 1px solid rgba(96,165,250,0.5);
+}
+
+.note {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top:6px;
+  text-align:center;
+}
+
+/* ---- LISTA DE PALABRAS ---- */
+.words ul {
+  list-style:none;
+  padding:0;
+  margin:0;
+  max-height:none;
+  overflow:auto;
+  padding-right: 8px;
+}
+
+.words li {
+  padding:10px 12px;
+  font-size: 16px;
+  border-radius:6px;
+  margin-bottom:6px;
+  background: rgba(96,165,250,0.08);
+  white-space: nowrap;
+}
+
+.words li.found {
+  text-decoration: line-through;
+  color: var(--success);
+  background: rgba(52,211,153,0.15);
+}
+
+/* ---- PANEL DERECHO (TABLERO) ---- */
+.right-panel,
+.center-panel {
+  flex:1;
+  display:flex;
+  justify-content:center;
+  align-items:flex-start;
+}
+
+.board {
+  padding:12px;
+  background: var(--surface);
+  border-radius: 12px;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.05);
+}
+
+.grid {
+  border-collapse: collapse;
+  user-select:none;
+}
+
+.grid td {
+  width: 38px;
+  height: 38px;
+  text-align:center;
+  vertical-align:middle;
+  font-weight:700;
+  font-size:18px;
+  border: 1px solid rgba(0,0,0,0.08);
+  cursor: pointer;
+  transition: background 150ms, transform 80ms;
+  background: #ffffff;
+  color: #1e293b;
+}
+
+.grid td:hover {
+  transform: translateY(-2px);
+}
+
+/* Selección */
+.grid td.selected {
+  background: rgba(167,139,250,0.3);
+  color: #1e293b;
+}
+
+/* Encontrado */
+.grid td.found {
+  background: rgba(52,211,153,0.25);
+  color: #065f46;
+  box-shadow: inset 0 -2px 0 rgba(0,0,0,0.08);
+}
+
+/* ---- RESPONSIVE ---- */
+@media (max-width: 900px) {
+  .container-root { flex-direction:column; }
+  .left-panel { width: 100%; order: 2; }
+  .right-panel { order: 1; }
+  .grid td { width: 30px; height:30px; font-size:14px; }
+}
+
+/* ---- GRID DE 3 COLUMNAS ---- */
+.container-root.three-columns {
+  display: grid;
+  grid-template-columns: 320px 1fr 350px;
+  gap: 1.2rem;
+  padding: 1rem;
+  background: linear-gradient(180deg, #eef2ff 0%, #f3f6ff 100%);
+  min-height: 80vh;
+}
+
+.right-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+}
+
+.ranking-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+  background: #ffffff;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.ranking-table th {
+  background: #4a4a4a;
+  color: white;
+  padding: 10px;
+  text-align: center;
+}
+
+.ranking-table td {
+  padding: 10px;
+  text-align: center;
+  font-size: 1rem;
+}
+
+.ranking-table tbody tr:nth-child(even) {
+  background: #f3f3f3;
+}
+
+.ranking-table tbody tr:nth-child(odd) {
+  background: #fafafa;
+}
+
+.medal-col {
+  font-size: 1.4rem;
+  font-weight: bold;
+}
+
+.title-centered {
+  text-align: center;
+  font-size: 30px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  letter-spacing: 1px;
+  color: #3B3B3B;
+}
+
