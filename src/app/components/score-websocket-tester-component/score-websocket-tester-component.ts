@@ -12,7 +12,7 @@ import { WebSocketConnection } from '../../services/connection/web-socket-connec
   // Nota: Si usas Angular 20, considera usar imports: [ScoreNativeWebSocketService] si es un componente standalone
 })
 export class ScoreWebsocketTesterComponent implements OnInit, OnDestroy {
-  latestResponse: string = 'Conectando...';
+  latestResponse: any = null;
 
   // Inyección del servicio
   constructor(public wsService: WebSocketConnection) {}
@@ -23,13 +23,13 @@ export class ScoreWebsocketTesterComponent implements OnInit, OnDestroy {
 
     // 2. Suscribirse a las respuestas del servidor
     this.wsService.getScoreResponse().subscribe(response => {
-      this.latestResponse = response.message;
-      console.log('Respuesta del Servidor (Nativo):', response.message);
+      this.latestResponse = response;
+      console.log('Respuesta del Servidor (Nativo):', response);
     });
   }
 
   sendTestScore(): void {
-    const testMessage = { message: `Puntaje enviado: ${new Date().toLocaleTimeString()}` };
+    const testMessage = { name: 'Tester', score: 100, time: 12345 };
     this.wsService.sendScore(testMessage);
   }
 

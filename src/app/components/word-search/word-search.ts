@@ -1,12 +1,13 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
-import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { Component, OnInit, OnDestroy, signal, WritableSignal } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { Subscription } from 'rxjs';
-import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { WebSocketConnection } from '../../services/connection/web-socket-connection';
 import { ScoreResponse } from '../../models/ScoreResponse';
 import { ScoreMessage } from '../../models/ScoreMessage';
 import { Inject, PLATFORM_ID } from '@angular/core';
 import Swal from 'sweetalert2';
+import { ScorePolling } from '../../services/score-table/score-polling';
 
 type Cell = {
   r: number;
@@ -26,14 +27,14 @@ type PlacedWord = {
 
 @Component({
   selector: 'app-wordsearch',
-  imports: [CommonModule, HttpClientModule],
+  imports: [],
   templateUrl: './word-search.html',
   styleUrls: ['./word-search.css'],
   host: { ngSkipHydration: '' }
 })
 export class WordSearch implements OnInit, OnDestroy {
   
-  rankingList: any[] = [];
+  rankingListSignal: WritableSignal<ScoreResponse[]> = signal([]);
   currentPlayerName: string = '';
   // GRID fijo 12x12
   readonly SIZE = 12;
@@ -48,7 +49,7 @@ export class WordSearch implements OnInit, OnDestroy {
   currentSelection: Cell[] = [];
 
   // Timer & score
-  timer = 0;
+  timer = signal(0);
   timerId: any = null;
   score = 0; // Puntaje total (sumará 10 por palabra encontrada)
 
@@ -79,17 +80,24 @@ export class WordSearch implements OnInit, OnDestroy {
   constructor(
     private http: HttpClient,
     private socket: WebSocketConnection,
+    private ranking: ScorePolling,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {}
 
   ngOnInit(): void {
-    this.loadRankingFromSession();
+    this.socket.connect();
+    this.loadRankingFromAPI()
     this.initEmptyGrid();
     // Nos suscribimos a respuestas del servidor STOMP (si las hay)
     this.socketSub = this.socket.getScoreResponse().subscribe((resp: ScoreResponse) => {
       if (resp) {
-        // muestra server message si lo recibe
-        console.log('Respuesta STOMP:', resp.message);
+        this.rankingListSignal.set([...this.rankingListSignal(), resp]);
+
+        this.rankingListSignal.update(list => list.sort((a, b) => {
+          if (b.score === a.score) return a.time - b.time;
+          return b.score - a.score;
+        }));
+        console.log('Respuesta STOMP:', resp);
       }
     });
   }
@@ -125,7 +133,7 @@ export class WordSearch implements OnInit, OnDestroy {
     // ---------------------------
     // VALIDACIÓN: Nombre repetido
     // ---------------------------
-    const alreadyExists = this.rankingList.some(
+    const alreadyExists = this.rankingListSignal().some(
       (x) => x.name.toLowerCase() === playerName.toLowerCase()
     );
 
@@ -141,15 +149,6 @@ export class WordSearch implements OnInit, OnDestroy {
     this.currentPlayerName = playerName;
     this.loading = true;
     this.resetState();
-
-    // conectar socket (nativo)
-    if (isPlatformBrowser(this.platformId)) {
-      try {
-        this.socket.connect();
-      } catch (e) {
-        console.warn('No se pudo conectar al WebSocket:', e);
-      }
-    }
 
     // traer 15 palabras y filtrar
     try {
@@ -206,7 +205,7 @@ export class WordSearch implements OnInit, OnDestroy {
 
   resetState() {
     this.stopTimer();
-    this.timer = 0;
+    this.timer.set(0);
     this.score = 0;
     this.currentSelection = [];
     this.wordsToFind = [];
@@ -296,8 +295,7 @@ export class WordSearch implements OnInit, OnDestroy {
       // sumar puntaje (ej: 10 pts por palabra encontrada)
       this.score += 10;
       // enviar evento STOMP
-      const msg: ScoreMessage = { message: `WORD=${foundEntry.word};TIME=${this.timer}` };
-      this.socket.sendScore(msg);
+
       // notificar usuario
       this.message = `Encontrada: ${foundEntry.word}`;
     } else {
@@ -308,26 +306,11 @@ export class WordSearch implements OnInit, OnDestroy {
     // si todas encontradas, detener timer
     if (this.wordsToFind.every(w => w.found)) {
 
+      const msg: ScoreMessage = { name: this.currentPlayerName, score: this.score, time: this.timer() };
+      this.socket.sendScore(msg);
       this.stopTimer();
-      this.message = `¡Juego completado! Tiempo: ${this.timer}s - Puntaje: ${this.score}`;
-    
-      // --- guardar en ranking ---
-      const entry = {
-        name: this.currentPlayerName,
-        score: this.score,
-        time: this.timer
-      };
-    
-      this.rankingList.push(entry);
-    
-      // ordenar por puntaje DESC y tiempo ASC
-      this.rankingList.sort((a, b) => {
-        if (b.score === a.score) return a.time - b.time;
-        return b.score - a.score;
-      });
-    
-      // guardar en sessionStorage
-      this.saveRankingToSession();
+      this.message = `¡Juego completado! Tiempo: ${this.timer()}s - Puntaje: ${this.score}`;
+
     }
     
   }
@@ -349,32 +332,11 @@ export class WordSearch implements OnInit, OnDestroy {
   // Resolver automáticamente (resalta todas)
   // ---------------------------
   autoSolve() {
-    for (const pw of this.wordsToFind) {
-      if (!pw.found) {
-        pw.found = true;
-        pw.coords.forEach(coord => this.grid[coord.r][coord.c].found = true);
-        // enviar evento STOMP por cada palabra
-        const msg: ScoreMessage = { message: `WORD=${pw.word};TIME=${this.timer}` };
-        this.socket.sendScore(msg);
-      }
-    }
+    const msg: ScoreMessage = { name: this.currentPlayerName, score: this.score, time: this.timer() };
+    this.socket.sendScore(msg);
     this.stopTimer();
     this.message = `Resuelto automáticamente. Puntaje: ${this.score}`;
 
-    // guardar auto-solve en ranking
-    const entry = {
-      name: this.currentPlayerName,
-      score: this.score,
-      time: this.timer
-    };
-
-    this.rankingList.push(entry);
-    this.rankingList.sort((a, b) => {
-      if (b.score === a.score) return a.time - b.time;
-      return b.score - a.score;
-    });
-
-    this.saveRankingToSession();
   }
 
   // ---------------------------
@@ -383,7 +345,7 @@ export class WordSearch implements OnInit, OnDestroy {
   startTimer() {
     if (this.timerId) return;
     this.timerId = setInterval(() => {
-      this.timer++;
+      this.timer.set(this.timer() + 1);
     }, 1000);
   }
 
@@ -417,27 +379,11 @@ export class WordSearch implements OnInit, OnDestroy {
     return isPlatformBrowser(this.platformId);
   }
 
-  private loadRankingFromSession(): void {
-    if (!this.isBrowser()) {
-      this.rankingList = [];
-      return;
-    }
-    try {
-      const stored = sessionStorage.getItem('ranking');
-      this.rankingList = stored ? JSON.parse(stored) : [];
-    } catch (e) {
-      console.warn('No se pudo leer sessionStorage:', e);
-      this.rankingList = [];
-    }
-  }
-
-  private saveRankingToSession(): void {
-    if (!this.isBrowser()) return;
-    try {
-      sessionStorage.setItem('ranking', JSON.stringify(this.rankingList));
-    } catch (e) {
-      console.warn('No se pudo escribir sessionStorage:', e);
-    }
+  private loadRankingFromAPI(): void{
+    this.ranking.getRanking().subscribe(data => {
+      console.log('Ranking desde API:', data);
+      this.rankingListSignal.set(data);
+    });
   }
 
 }

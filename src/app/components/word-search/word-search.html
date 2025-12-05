@@ -4,7 +4,7 @@
   <div class="left-panel">
     <div class="card stat">
       <h3>Tiempo</h3>
-      <div class="large">{{ timer }}s</div>
+      <div class="large">{{ timer() }}s</div>
     </div>
 
     <div class="card stat">
@@ -89,7 +89,7 @@
     </thead>
 
     <tbody>
-      @for (item of rankingList; track item.name; let i = $index) {
+      @for (item of rankingListSignal(); track item.name; let i = $index) {
 
         <tr>
           <td class="medal-col">

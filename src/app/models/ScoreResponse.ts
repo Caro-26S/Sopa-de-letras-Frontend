@@ -1,3 +1,5 @@
 export interface ScoreResponse {
-    message: string;
+    name: string;
+    score: number;
+    time: number;
 }

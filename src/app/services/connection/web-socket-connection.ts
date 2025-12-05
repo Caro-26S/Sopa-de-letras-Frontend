@@ -1,10 +1,9 @@
-import { Inject, Injectable, PLATFORM_ID, signal } from '@angular/core';
+import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { Observable, Subject } from 'rxjs';
 import { ScoreResponse } from '../../models/ScoreResponse';
 import { ScoreMessage } from '../../models/ScoreMessage';
 import { isPlatformBrowser } from '@angular/common';
 import { environment } from '../../environments/environment.dev';
-import { Sign } from 'crypto';
 
 @Injectable({
   providedIn: 'root',
