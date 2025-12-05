@@ -19,7 +19,6 @@ export class ScoreWebsocketTesterComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     // 1. Conectar al iniciar el componente
-    this.wsService.connect();
 
     // 2. Suscribirse a las respuestas del servidor
     this.wsService.getScoreResponse().subscribe(response => {

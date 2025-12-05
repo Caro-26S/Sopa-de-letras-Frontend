@@ -85,7 +85,6 @@ export class WordSearch implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.socket.connect();
     this.loadRankingFromAPI()
     this.initEmptyGrid();
     // Nos suscribimos a respuestas del servidor STOMP (si las hay)
